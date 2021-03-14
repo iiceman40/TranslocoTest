@@ -1,31 +1,50 @@
 import { TestBed } from '@angular/core/testing';
 import { AppComponent } from './app.component';
+import { TranslocoService, TranslocoTestingModule } from '@ngneat/transloco';
+import { take } from 'rxjs/operators';
+import SpyObj = jasmine.SpyObj;
+import { of } from 'rxjs';
 
 describe('AppComponent', () => {
+  let component: AppComponent;
+
+  const translocoService: SpyObj<TranslocoService> = jasmine.createSpyObj(
+    'translocoService',
+    {
+      selectTranslate: of('mock-translation'),
+    }
+  );
+
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [
-        AppComponent
+      declarations: [AppComponent],
+      imports: [TranslocoTestingModule],
+      providers: [
+        {
+          provide: TranslocoService,
+          useValue: translocoService,
+        },
       ],
     }).compileComponents();
   });
 
+  beforeEach(() => {
+    const fixture = TestBed.createComponent(AppComponent);
+    component = fixture.componentInstance;
+  });
+
   it('should create the app', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app).toBeTruthy();
+    expect(component).toBeTruthy();
   });
 
-  it(`should have as title 'transloco-test'`, () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app.title).toEqual('transloco-test');
-  });
-
-  it('should render title', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    fixture.detectChanges();
-    const compiled = fixture.nativeElement;
-    expect(compiled.querySelector('.content span').textContent).toContain('transloco-test app is running!');
+  describe('ngOnInit', () => {
+    it('should dynamically translate the text', () => {
+      component.ngOnInit();
+      component.dynamicallyTranslatedText$
+        .pipe(take(1))
+        .subscribe((textValue) => {
+          expect(textValue).toEqual('mock-text');
+        });
+    });
   });
 });
